@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AiOutlineHome, AiOutlineSearch, AiOutlineUser } from 'react-icons/ai';
+import { AiOutlineHome, AiOutlineSearch, AiOutlineHistory } from 'react-icons/ai';
 
 export default function BottomNav() {
   const currentPath = usePathname();
@@ -13,7 +13,7 @@ export default function BottomNav() {
       <nav style={styles.nav}>
         <NavLink href="/" icon={<AiOutlineHome />} label="Home" isActive={currentPath === '/'} />
         <NavLink href="/search" icon={<AiOutlineSearch />} label="Search" isActive={currentPath === '/search'} />
-        <NavLink href="/my" icon={<AiOutlineUser />} label="My" isActive={currentPath === '/my'} />
+        <NavLink href="/history" icon={<AiOutlineHistory />} label="History" isActive={currentPath === '/history'} />
       </nav>
     </div>
   );

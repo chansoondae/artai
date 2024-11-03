@@ -2,57 +2,109 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { AiOutlineRobot } from 'react-icons/ai';
+import { AiOutlineRobot, AiOutlineSend } from 'react-icons/ai';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import styles from './ArtModal.module.css'; // CSS 모듈 가져오기
 import { fetchChatGPTResponse } from '../api/chatGPT';
+import app from './../firebaseConfig';
+import { collection, addDoc, serverTimestamp, getFirestore } from "firebase/firestore";
+
 
 export default function ArtModal({ art, onClose }) {
-  const [chatHistory, setChatHistory] = useState([]); // AI 응답 히스토리
-  const [questionExamples, setQuestionExamples] = useState([]); // 질문 예시
-  const [isAIStarted, setIsAIStarted] = useState(false); // AI 시작 상태
+  const [chatHistory, setChatHistory] = useState([]);
+  const [questionExamples, setQuestionExamples] = useState([]);
+  const [isAIStarted, setIsAIStarted] = useState(false);
+  const [chatInput, setChatInput] = useState(''); // 사용자가 입력한 질문 상태
+  const db=getFirestore(app);
 
+  // Firestore에 대화 저장 함수
+  const saveChatHistory = async (question, answer, examples) => {
+    try {
+      await addDoc(collection(db, "chatHistory"), {
+        timestamp: serverTimestamp(),
+        imageUrl: `/${art.image}`,
+        title: art.title,
+        artist: art.artist,
+        question: question,
+        answer: answer,
+        examples: examples.slice(1, 4), // 최대 3개의 관련 질문 예시만 저장
+      });
+    } catch (error) {
+      console.error("Error saving chat history:", error);
+    }
+  };
+
+  //AI 시작 대화버튼 눌렀을 때
   const handleStartAI = async () => {
     setIsAIStarted(true);
 
-    // 첫 질문을 chatHistory에 추가하여 "생각중..." + 로딩 스피너 표시
-    const initialQuestion = `작가: ${art.artist}, 작품: ${art.title}에 대한 전시해설을 해주세요.`;
+    const initialQuestion = `작가: ${art.artist}, 작품: ${art.title}에 대한 전시해설을 부탁드립니다.`;
     setChatHistory([...chatHistory, { question: initialQuestion, answer: '생각중...', loading: true }]);
 
-    // API 호출로 실제 응답 및 관련 질문 예시 받기
-    const { answer, questionExamples } = await fetchChatGPTResponse(initialQuestion, art.artist, art.title);
+    const { answer, questionExamples } = await fetchChatGPTResponse({
+      role: "system",
+      content: "You are a knowledgeable exhibition docent. Provide brief responses in Korean and include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+    }, initialQuestion);
 
-    // 실제 AI 응답과 관련 질문 예시 설정
     setChatHistory((prevHistory) =>
       prevHistory.map((chat, index) =>
         index === prevHistory.length - 1 ? { ...chat, answer, loading: false } : chat
       )
     );
     setQuestionExamples(questionExamples);
+
+    // Firestore에 대화 저장
+    saveChatHistory(initialQuestion, answer, questionExamples);
   };
 
+  // 예시 질문 버튼 클릭 시
   const handleExampleClick = async (example) => {
-    // 클릭된 질문을 chatHistory에 추가 후 "생각중..." + 로딩 스피너 표시
-    const newChatHistory = [...chatHistory, { question: example, answer: '생각중...', loading: true }];
-    setChatHistory(newChatHistory);
+    setChatHistory([...chatHistory, { question: example, answer: '생각중...', loading: true }]);
 
-    // API 호출로 AI 응답 및 새로운 질문 예시 가져오기
-    const { answer, questionExamples } = await fetchChatGPTResponse(example, art.artist, art.title);
+    const { answer, questionExamples } = await fetchChatGPTResponse({
+      role: "system",
+      content: "You are a knowledgeable exhibition docent. Provide brief responses in Korean and include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+    }, example);
 
-    // 새로운 AI 답변 및 관련 질문 예시 업데이트
     setChatHistory((prevHistory) =>
       prevHistory.map((chat, index) =>
         index === prevHistory.length - 1 ? { ...chat, answer, loading: false } : chat
       )
     );
     setQuestionExamples(questionExamples);
+
+    // Firestore에 대화 저장
+    saveChatHistory(example, answer, questionExamples);
   };
 
-  // 모달이 처음 열릴 때 스크롤을 맨 아래로 이동
+  // 사용자가 직접 입력한 질문을 보내고 응답 받기
+  const handleSendQuestion = async () => {
+    if (chatInput.trim() === '') return;
+
+    const userQuestion = chatInput.trim();
+    setChatHistory([...chatHistory, { question: userQuestion, answer: '생각중...', loading: true }]);
+    setChatInput(''); 
+
+    const { answer, questionExamples } = await fetchChatGPTResponse({
+      role: "system",
+      content: "You are a knowledgeable exhibition docent. Provide brief responses in Korean and include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+    }, userQuestion);
+
+    setChatHistory((prevHistory) =>
+      prevHistory.map((chat, index) =>
+        index === prevHistory.length - 1 ? { ...chat, answer, loading: false } : chat
+      )
+    );
+    setQuestionExamples(questionExamples);
+
+    // Firestore에 대화 저장
+    saveChatHistory(userQuestion, answer, questionExamples);
+  };
+
   useEffect(() => {
     const modalContent = document.getElementById("modalContent");
     modalContent.scrollTop = modalContent.scrollHeight;
-  }, []); // 빈 의존성 배열로 처음 렌더링 시 한 번만 실행
+  }, []);
 
   useEffect(() => {
     if (isAIStarted || chatHistory.length > 0) {
@@ -69,44 +121,61 @@ export default function ArtModal({ art, onClose }) {
 
   return (
     <div style={modalStyles.modalBackground} onClick={handleBackgroundClick}>
-      <div id="modalContent" style={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+      <div style={modalStyles.modalContentContainer}>
         <button onClick={onClose} style={modalStyles.closeButton}>✖</button>
-        <img src={`/${art.image}`} alt={art.title} style={modalStyles.image} />
-        <h2 style={modalStyles.title}>{art.title}</h2>
-        <p style={modalStyles.artist}>{art.artist}</p>
+        <div id="modalContent" style={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <img src={`/${art.image}`} alt={art.title} style={modalStyles.image} />
+          <h2 style={modalStyles.title}>{art.title}</h2>
+          <p style={modalStyles.artist}>{art.artist}</p>
 
-        {isAIStarted ? (
-          <div style={modalStyles.chatContainer}>
-            {/* Chat history */}
-            {chatHistory.map((chat, idx) => (
-              <div key={idx}>
-                <div style={modalStyles.userMessage}>
-                  <p className="mb-1">{chat.question}</p>
+          {isAIStarted ? (
+            <div style={modalStyles.chatContainer}>
+              {chatHistory.map((chat, idx) => (
+                <div key={idx}>
+                  <div style={modalStyles.userMessage}>
+                    <p className="mb-1">{chat.question}</p>
+                  </div>
+                  <div style={modalStyles.aiMessage}>
+                    <AiOutlineRobot style={modalStyles.icon} />
+                    <p className="mb-1">
+                      {chat.answer}
+                      {chat.loading && <span className={styles.spinner} />}
+                    </p>
+                  </div>
                 </div>
-                <div style={modalStyles.aiMessage}>
-                  <AiOutlineRobot style={modalStyles.icon} />
-                  <p className="mb-1">
-                    {chat.answer}
-                    {chat.loading && <span className={styles.spinner} />} {/* 로딩 스피너 추가 */}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            {/* Question examples (2nd to 4th only, with Bootstrap button style) */}
-            <div style={modalStyles.exampleButtons}>
-              {questionExamples.slice(1, 4).map((example, idx) => (
-                <button key={idx + 1} className="btn btn-outline-secondary" onClick={() => handleExampleClick(example)}>
-                  {example}
-                </button>
               ))}
+              
+              {/* 관련 질문 예시와 직접 질문 입력 필드 */}
+              {questionExamples.length > 0 && (
+                <>
+                  <div style={modalStyles.exampleButtons}>
+                    {questionExamples.slice(1, 4).map((example, idx) => (
+                      <button key={idx + 1} className="btn btn-outline-secondary" onClick={() => handleExampleClick(example)}>
+                        {example}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={modalStyles.inputContainer}>
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="질문을 입력하세요"
+                      className="form-control"
+                    />
+                    <button onClick={handleSendQuestion} className="btn btn-secondary">
+                      <AiOutlineSend />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
-        ) : (
-          <button onClick={handleStartAI} className="btn btn-outline-secondary">
-            AI 시작
-          </button>
-        )}
+          ) : (
+            <button onClick={handleStartAI} className="btn btn-outline-secondary">
+              AI 시작
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -124,18 +193,13 @@ const modalStyles = {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: '20px',
+  modalContentContainer: {
+    position: 'relative',
     width: '80%',
     maxWidth: '600px',
-    maxHeight: '80%',
-    borderRadius: '10px',
-    position: 'relative',
-    overflowY: 'auto', // 전체 모달에 스크롤
   },
   closeButton: {
-    position: 'absolute', // 모달 창의 오른쪽 상단에 고정
+    position: 'absolute',
     top: '10px',
     right: '10px',
     background: 'none',
@@ -143,6 +207,14 @@ const modalStyles = {
     fontSize: '1.5rem',
     cursor: 'pointer',
     color: '#333',
+    zIndex: 1,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '10px',
+    maxHeight: '80vh',
+    overflowY: 'auto',
   },
   image: {
     width: '100%',
@@ -188,6 +260,12 @@ const modalStyles = {
   exampleButtons: {
     display: 'flex',
     flexDirection: 'column',
+    gap: '10px',
+    marginTop: '10px',
+  },
+  inputContainer: {
+    display: 'flex',
+    alignItems: 'center',
     gap: '10px',
     marginTop: '10px',
   },
