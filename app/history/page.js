@@ -37,9 +37,9 @@ export default function HistoryPage() {
     if (!timestamp) return "Unknown time";
 
     const date = timestamp.toDate();
-    const koreaDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+    // const koreaDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
 
-    return formatDistanceToNow(koreaDate, { addSuffix: true, locale: ko });
+    return formatDistanceToNow(date, { addSuffix: true, locale: ko });
   };
 
   const handleEntryClick = (entry) => {
