@@ -4,21 +4,21 @@ import React from 'react';
 export default function Header() {
   return (
     <header style={styles.header}>
-      <h1 style={styles.title}>Art Friends</h1>
+      <h1 style={{ ...styles.title }}>Art Friends</h1>
     </header>
   );
 }
 
 const styles = {
   header: {
-    padding: '10px 20px', // 상하 여백을 줄여 컴팩트하게
+    padding: '10px 20px',
     textAlign: 'center',
     borderBottom: '1px solid #ccc',
   },
   title: {
-    fontFamily: 'Brush Script MT, cursive',
-    fontSize: '2rem', // 폰트 크기를 줄여 높이 절약
+    fontFamily: 'Sacramento, cursive', // Sacramento 폰트 적용
+    fontSize: '2.5rem', // 폰트 크기 조정
     color: '#333',
-    margin: 0, // 제목의 기본 여백 제거
+    margin: 0,
   },
 };

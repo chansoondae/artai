@@ -43,7 +43,7 @@ export default function ArtModal({ art, onClose }) {
 
     const { answer, questionExamples } = await fetchChatGPTResponse({
       role: "system",
-      content: "You are a knowledgeable exhibition docent. Provide brief responses in Korean and include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 15 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
     }, initialQuestion);
 
     setChatHistory((prevHistory) =>
@@ -59,12 +59,13 @@ export default function ArtModal({ art, onClose }) {
 
   // 예시 질문 버튼 클릭 시
   const handleExampleClick = async (example) => {
+    const fullExample = `작가: ${art.artist}, 작품: ${art.title}과 관련된 질문입니다: ${example}`;
     setChatHistory([...chatHistory, { question: example, answer: '생각중...', loading: true }]);
 
     const { answer, questionExamples } = await fetchChatGPTResponse({
       role: "system",
-      content: "You are a knowledgeable exhibition docent. Provide brief responses in Korean and include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
-    }, example);
+      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 15 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+    }, fullExample);
 
     setChatHistory((prevHistory) =>
       prevHistory.map((chat, index) =>
@@ -82,13 +83,15 @@ export default function ArtModal({ art, onClose }) {
     if (chatInput.trim() === '') return;
 
     const userQuestion = chatInput.trim();
+    const fullUserQuestion = `작가: ${art.artist}, 작품: ${art.title}과 관련된 질문입니다: ${chatInput.trim()}`;
+    
     setChatHistory([...chatHistory, { question: userQuestion, answer: '생각중...', loading: true }]);
     setChatInput(''); 
 
     const { answer, questionExamples } = await fetchChatGPTResponse({
       role: "system",
-      content: "You are a knowledgeable exhibition docent. Provide brief responses in Korean and include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
-    }, userQuestion);
+      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 15 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+    }, fullUserQuestion);
 
     setChatHistory((prevHistory) =>
       prevHistory.map((chat, index) =>

@@ -2,43 +2,79 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import app from './../firebaseConfig';
-import { collection, getDocs, orderBy, query, getFirestore } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, getFirestore, startAfter, limit } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ArtModal from '../components/ArtModal';
 
 export default function HistoryPage() {
   const [historyData, setHistoryData] = useState([]);
+  const [lastDoc, setLastDoc] = useState(null); // 마지막 문서 저장
+  const [loading, setLoading] = useState(false); // 데이터 로딩 상태
+  const [isEnd, setIsEnd] = useState(false); // 데이터의 끝에 도달했는지 여부
   const [selectedArt, setSelectedArt] = useState(null);
   const db = getFirestore(app);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const q = query(collection(db, "chatHistory"), orderBy("timestamp", "desc"));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setHistoryData(data);
-      } catch (error) {
-        console.error("Error fetching chat history:", error);
-      }
-    };
+  // Firestore에서 데이터 불러오기 함수
+  const fetchHistory = useCallback(async () => {
+    if (loading || isEnd) return;
 
-    fetchHistory();
+    setLoading(true);
+    try {
+      let q = query(
+        collection(db, "chatHistory"),
+        orderBy("timestamp", "desc"),
+        limit(5)
+      );
+
+      // 마지막 문서가 있을 경우 이를 시작으로 데이터 가져오기
+      if (lastDoc) {
+        q = query(q, startAfter(lastDoc));
+      }
+
+      const querySnapshot = await getDocs(q);
+
+      // 데이터가 더 이상 없으면 isEnd 상태 설정
+      if (querySnapshot.empty) {
+        setIsEnd(true);
+        return;
+      }
+
+      // 가져온 데이터와 마지막 문서 업데이트
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setHistoryData(prevData => [...prevData, ...data]);
+      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [db, lastDoc, loading, isEnd]);
+
+  useEffect(() => {
+    fetchHistory(); // 컴포넌트 마운트 시 첫 데이터 가져오기
   }, []);
 
-  // Firestore 타임스탬프를 한국 시간대에 맞게 변환하고, 상대 시간을 계산하는 함수
+  // 스크롤 이벤트 핸들러
+  const handleScroll = () => {
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
+      fetchHistory(); // 스크롤이 끝에 도달하면 데이터 추가 로드
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Unknown time";
-
     const date = timestamp.toDate();
-    // const koreaDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-
     return formatDistanceToNow(date, { addSuffix: true, locale: ko });
   };
 
@@ -59,33 +95,37 @@ export default function HistoryPage() {
     <div style={{ padding: '20px' }}>
       <h2>History</h2>
       {historyData.length > 0 ? (
-        historyData.map((entry) => (
+        historyData.map((entry, index) => (
           <HistoryEntry
-            key={entry.id}
+          key={`${entry.id}-${index}`} // 고유한 키로 ID와 인덱스 조합 사용
             entry={entry}
             onClick={() => handleEntryClick(entry)}
-            formatTimestamp={formatTimestamp} // formatTimestamp 함수를 prop으로 전달
+            formatTimestamp={formatTimestamp}
           />
         ))
       ) : (
-        <p>Now lodaing....</p>
+        <p>No history available.</p>
       )}
 
-      {/* ArtModal 컴포넌트 */}
-      {selectedArt && (
-        <ArtModal art={selectedArt} onClose={handleCloseModal} />
+      {loading && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px' }}>
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
       )}
+
+      {selectedArt && <ArtModal art={selectedArt} onClose={handleCloseModal} />}
     </div>
   );
 }
 
 // 개별 기록 컴포넌트
-function HistoryEntry({ entry, onClick, formatTimestamp }) { // formatTimestamp를 prop으로 받기
+function HistoryEntry({ entry, onClick, formatTimestamp }) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   return (
     <div style={styles.historyEntry} onClick={onClick}>
-      {/* 이미지 로드 전 기본 이미지 표시 */}
       <div style={styles.imageContainer}>
         <img
           src={isImageLoaded ? entry.imageUrl : "/loading-placeholder.png"}

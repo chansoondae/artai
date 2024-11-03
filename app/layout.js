@@ -15,6 +15,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <Header />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap"
+          rel="stylesheet"
+        />
         <div style={styles.container}>
           {children}
         </div>
