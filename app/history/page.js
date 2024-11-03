@@ -17,7 +17,7 @@ export default function HistoryPage() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const q = query(collection(db, "chatHistory"), orderBy("timestamp", "asc"));
+        const q = query(collection(db, "chatHistory"), orderBy("timestamp", "desc"));
         const querySnapshot = await getDocs(q);
         const data = querySnapshot.docs.map(doc => ({
           id: doc.id,
