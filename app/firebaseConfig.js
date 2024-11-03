@@ -4,6 +4,9 @@
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signOut } from "firebase/auth";
+
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -24,3 +27,26 @@ const analytics =
   app.name && typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 export default app;
+
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    console.log("User logged in:", user);
+    return user;
+  } catch (error) {
+    console.error("Error during Google login:", error);
+  }
+};
+
+export const logout = async () => {
+  try {
+    await signOut(auth);
+    console.log("User logged out");
+  } catch (error) {
+    console.error("Error during logout:", error);
+  }
+};

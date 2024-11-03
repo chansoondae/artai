@@ -2,21 +2,41 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { AiOutlineSearch } from 'react-icons/ai'; // 검색 아이콘 추가
-import ArtModal from '../components/ArtModal'; // ArtModal 컴포넌트 추가
-import artworks from '../components/data';
+import { AiOutlineSearch } from 'react-icons/ai';
+import ArtModal from '../components/ArtModal';
+import app from './../firebaseConfig';
+import { getFirestore, collection, getDocs } from "firebase/firestore";
 
 export default function SearchPage() {
   const [query, setQuery] = useState(''); // 검색어 상태
+  const [allArtworks, setAllArtworks] = useState([]); // 전체 작품 데이터
   const [results, setResults] = useState([]); // 필터링된 결과
   const [selectedArt, setSelectedArt] = useState(null); // 선택된 작품
   const [relatedArtworks, setRelatedArtworks] = useState([]); // 같은 작가의 다른 작품들
   const [showModal, setShowModal] = useState(false); // 모달 표시 상태
+  const db = getFirestore(app);
 
+  // Firestore에서 작품 데이터 불러오기
   useEffect(() => {
-    // 검색어가 변경될 때마다 자동 완성 결과 필터링
+    const fetchArtworks = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "artworks"));
+        const artworksData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAllArtworks(artworksData);
+      } catch (error) {
+        console.error("Error fetching artworks:", error);
+      }
+    };
+    fetchArtworks();
+  }, []);
+
+  // 검색어가 변경될 때마다 자동 완성 결과 필터링
+  useEffect(() => {
     if (query) {
-      const filtered = artworks.filter(
+      const filtered = allArtworks.filter(
         (art) =>
           art.title.toLowerCase().includes(query.toLowerCase()) ||
           art.artist.toLowerCase().includes(query.toLowerCase())
@@ -25,7 +45,7 @@ export default function SearchPage() {
     } else {
       setResults([]); // 검색어가 없으면 결과를 비웁니다.
     }
-  }, [query]);
+  }, [query, allArtworks]);
 
   // 자동 완성 리스트에서 항목을 클릭했을 때
   const handleSelectArt = (selectedArt) => {
@@ -33,10 +53,9 @@ export default function SearchPage() {
     setQuery(''); // 검색어 입력 필드를 빈 칸으로 초기화
 
     // 동일한 작가의 다른 작품들 필터링
-    const related = artworks.filter(
+    const related = allArtworks.filter(
       (art) => art.artist === selectedArt.artist && art.title !== selectedArt.title
     );
-
     setRelatedArtworks(related); // 같은 작가의 작품 설정
     setResults([]); // 자동 완성 결과 리스트를 비웁니다.
   };
@@ -75,7 +94,7 @@ export default function SearchPage() {
             <ul className="list-group mt-3">
               {results.map((art, index) => (
                 <li
-                  key={index}
+                  key={art.id}
                   className="list-group-item"
                   onClick={() => handleSelectArt(art)}
                   style={{ cursor: 'pointer' }}
@@ -101,7 +120,7 @@ export default function SearchPage() {
                 style={{ cursor: 'pointer' }}
               >
                 <img
-                  src={`/${selectedArt.image}`}
+                  src={selectedArt.imageUrl}
                   alt={selectedArt.title}
                   className="card-img-top"
                   style={{ height: '400px', objectFit: 'cover' }}
@@ -116,15 +135,15 @@ export default function SearchPage() {
 
           {/* 같은 작가의 다른 작품들 */}
           <div className="row mt-4">
-            {relatedArtworks.map((art, index) => (
-              <div key={index} className="col-md-4 mb-4">
+            {relatedArtworks.map((art) => (
+              <div key={art.id} className="col-md-4 mb-4">
                 <div
                   className="card"
                   onClick={() => handleCardClick(art)}
                   style={{ cursor: 'pointer' }}
                 >
                   <img
-                    src={`/${art.image}`}
+                    src={art.imageUrl}
                     alt={art.title}
                     className="card-img-top"
                     style={{ height: '200px', objectFit: 'cover' }}
@@ -142,7 +161,7 @@ export default function SearchPage() {
 
       {/* 모달 창 */}
       {showModal && selectedArt && (
-        <ArtModal art={selectedArt} onClose={handleCloseModal} /> // 모달 컴포넌트
+        <ArtModal art={selectedArt} onClose={handleCloseModal} /> 
       )}
     </div>
   );

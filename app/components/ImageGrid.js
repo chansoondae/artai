@@ -7,9 +7,9 @@ export default function ImageGrid({ artworks, onImageClick }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '20px' }}>
       {Array.isArray(artworks) && artworks.map((art, index) => (
-        <div key={index} style={{ width: '100%', paddingTop: '100%', position: 'relative', overflow: 'hidden' }}>
+        <div key={art.id || index} style={{ width: '100%', paddingTop: '100%', position: 'relative', overflow: 'hidden' }}>
           <img
-            src={`/${art.image}`}
+            src={art.imageUrl} // Firebase에서 받아온 imageUrl 사용
             alt={art.title}
             onClick={() => onImageClick(art)}
             style={{

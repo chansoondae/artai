@@ -1,15 +1,15 @@
-// app/page.js
+// app/feed/page.js
 
 "use client"
 
 import { useEffect, useState } from 'react';
-import ImageGrid from './components/ImageGrid';
-import ArtModal from './components/ArtModal';
-import app from './firebaseConfig';
+import ImageGrid from '../components/ImageGrid';
+import ArtModal from '../components/ArtModal';
+import app from '../firebaseConfig';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-export default function HomePage() {
+export default function FeedPage() {
   const [allArtworks, setAllArtworks] = useState([]);
   const [displayedArtworks, setDisplayedArtworks] = useState([]);
   const [selectedArt, setSelectedArt] = useState(null);

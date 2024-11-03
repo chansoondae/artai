@@ -4,16 +4,16 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import app from './../firebaseConfig';
-import { collection, getDocs, orderBy, query, getFirestore, startAfter, limit } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, getFirestore, startAfter, limit, doc, getDoc } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ArtModal from '../components/ArtModal';
 
 export default function HistoryPage() {
   const [historyData, setHistoryData] = useState([]);
-  const [lastDoc, setLastDoc] = useState(null); // 마지막 문서 저장
-  const [loading, setLoading] = useState(false); // 데이터 로딩 상태
-  const [isEnd, setIsEnd] = useState(false); // 데이터의 끝에 도달했는지 여부
+  const [lastDoc, setLastDoc] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isEnd, setIsEnd] = useState(false);
   const [selectedArt, setSelectedArt] = useState(null);
   const db = getFirestore(app);
 
@@ -29,24 +29,45 @@ export default function HistoryPage() {
         limit(5)
       );
 
-      // 마지막 문서가 있을 경우 이를 시작으로 데이터 가져오기
       if (lastDoc) {
         q = query(q, startAfter(lastDoc));
       }
 
       const querySnapshot = await getDocs(q);
 
-      // 데이터가 더 이상 없으면 isEnd 상태 설정
       if (querySnapshot.empty) {
         setIsEnd(true);
         return;
       }
 
-      // 가져온 데이터와 마지막 문서 업데이트
-      const data = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const data = await Promise.all(
+        querySnapshot.docs.map(async (docSnap) => {
+          const chatData = docSnap.data();
+          
+          // 작품의 제목과 작가 이름을 가져오기 위해 artworks 컬렉션에서 imageID 기반으로 데이터 조회
+          if (chatData.imageID) {
+            const artworkRef = doc(db, "artworks", chatData.imageID); // 여기에서 db를 사용하여 doc을 호출
+            const artworkSnap = await getDoc(artworkRef);
+            
+            if (artworkSnap.exists()) {
+              const artworkData = artworkSnap.data();
+              return {
+                id: docSnap.id,
+                ...chatData,
+                title: artworkData.title,
+                artist: artworkData.artist,
+              };
+            }
+          }
+          
+          // artwork 데이터를 찾지 못한 경우 기본 데이터만 사용
+          return {
+            id: docSnap.id,
+            ...chatData,
+          };
+        })
+      );
+
       setHistoryData(prevData => [...prevData, ...data]);
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
     } catch (error) {
@@ -57,13 +78,12 @@ export default function HistoryPage() {
   }, [db, lastDoc, loading, isEnd]);
 
   useEffect(() => {
-    fetchHistory(); // 컴포넌트 마운트 시 첫 데이터 가져오기
+    fetchHistory();
   }, []);
 
-  // 스크롤 이벤트 핸들러
   const handleScroll = () => {
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
-      fetchHistory(); // 스크롤이 끝에 도달하면 데이터 추가 로드
+      fetchHistory();
     }
   };
 
@@ -80,7 +100,7 @@ export default function HistoryPage() {
 
   const handleEntryClick = (entry) => {
     const art = {
-      image: entry.imageUrl.replace(/^\//, ''),
+      imageUrl: entry.imageUrl,
       title: entry.title,
       artist: entry.artist,
     };
@@ -97,7 +117,7 @@ export default function HistoryPage() {
       {historyData.length > 0 ? (
         historyData.map((entry, index) => (
           <HistoryEntry
-          key={`${entry.id}-${index}`} // 고유한 키로 ID와 인덱스 조합 사용
+            key={`${entry.id}-${index}`}
             entry={entry}
             onClick={() => handleEntryClick(entry)}
             formatTimestamp={formatTimestamp}
@@ -134,8 +154,8 @@ function HistoryEntry({ entry, onClick, formatTimestamp }) {
           onLoad={() => setIsImageLoaded(true)}
         />
       </div>
-      <h3 style={styles.title}>{entry.title}</h3>
-      <p style={styles.artist}>Artist: {entry.artist}</p>
+      <h3 style={styles.title}>{entry.title || "Untitled"}</h3>
+      <p style={styles.artist}>Artist: {entry.artist || "Unknown"}</p>
       <p style={styles.timestamp}>Written: {formatTimestamp(entry.timestamp)}</p>
       <p style={styles.question}><strong>Question:</strong> {entry.question}</p>
       <p style={styles.answer}><strong>Answer:</strong> {entry.answer}</p>

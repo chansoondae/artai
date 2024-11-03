@@ -4,40 +4,39 @@
 import React, { useState, useEffect } from 'react';
 import { AiOutlineRobot, AiOutlineSend } from 'react-icons/ai';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import styles from './ArtModal.module.css'; // CSS 모듈 가져오기
+import styles from './ArtModal.module.css';
 import { fetchChatGPTResponse } from '../api/chatGPT';
 import app from './../firebaseConfig';
 import { collection, addDoc, serverTimestamp, getFirestore } from "firebase/firestore";
-
 
 export default function ArtModal({ art, onClose }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [questionExamples, setQuestionExamples] = useState([]);
   const [isAIStarted, setIsAIStarted] = useState(false);
-  const [chatInput, setChatInput] = useState(''); // 사용자가 입력한 질문 상태
-  const db=getFirestore(app);
+  const [chatInput, setChatInput] = useState('');
+  const db = getFirestore(app);
 
   // Firestore에 대화 저장 함수
   const saveChatHistory = async (question, answer, examples) => {
     try {
       await addDoc(collection(db, "chatHistory"), {
         timestamp: serverTimestamp(),
-        imageUrl: `/${art.image}`,
+        imageUrl: art.imageUrl,
         title: art.title,
         artist: art.artist,
+        imageID: art.id, // 작품 ID 저장
         question: question,
         answer: answer,
-        examples: examples.slice(1, 4), // 최대 3개의 관련 질문 예시만 저장
+        examples: examples.slice(1, 4),
       });
     } catch (error) {
       console.error("Error saving chat history:", error);
     }
   };
 
-  //AI 시작 대화버튼 눌렀을 때
+  // AI 시작 버튼 클릭 시
   const handleStartAI = async () => {
     setIsAIStarted(true);
-
     const initialQuestion = `작가: ${art.artist}, 작품: ${art.title}에 대한 전시해설을 부탁드립니다.`;
     setChatHistory([...chatHistory, { question: initialQuestion, answer: '생각중...', loading: true }]);
 
@@ -57,7 +56,7 @@ export default function ArtModal({ art, onClose }) {
     saveChatHistory(initialQuestion, answer, questionExamples);
   };
 
-  // 예시 질문 버튼 클릭 시
+  // 예시 질문 클릭 시
   const handleExampleClick = async (example) => {
     const fullExample = `작가: ${art.artist}, 작품: ${art.title}과 관련된 질문입니다: ${example}`;
     setChatHistory([...chatHistory, { question: example, answer: '생각중...', loading: true }]);
@@ -78,15 +77,14 @@ export default function ArtModal({ art, onClose }) {
     saveChatHistory(example, answer, questionExamples);
   };
 
-  // 사용자가 직접 입력한 질문을 보내고 응답 받기
+  // 직접 입력한 질문 처리
   const handleSendQuestion = async () => {
     if (chatInput.trim() === '') return;
 
     const userQuestion = chatInput.trim();
     const fullUserQuestion = `작가: ${art.artist}, 작품: ${art.title}과 관련된 질문입니다: ${chatInput.trim()}`;
-    
     setChatHistory([...chatHistory, { question: userQuestion, answer: '생각중...', loading: true }]);
-    setChatInput(''); 
+    setChatInput('');
 
     const { answer, questionExamples } = await fetchChatGPTResponse({
       role: "system",
@@ -127,7 +125,7 @@ export default function ArtModal({ art, onClose }) {
       <div style={modalStyles.modalContentContainer}>
         <button onClick={onClose} style={modalStyles.closeButton}>✖</button>
         <div id="modalContent" style={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
-          <img src={`/${art.image}`} alt={art.title} style={modalStyles.image} />
+          <img src={art.imageUrl} alt={art.title} style={modalStyles.image} /> {/* Firebase imageUrl로 변경 */}
           <h2 style={modalStyles.title}>{art.title}</h2>
           <p style={modalStyles.artist}>{art.artist}</p>
 

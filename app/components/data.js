@@ -3,8 +3,8 @@
 const artworks = [
     { image: "01.jpg", title: "The Incredulity of Saint Thomas", artist: "Caravaggio", liked: true },
     { image: "02.jpg", title: "Bacchus", artist: "Caravaggio", liked: false },
-    { image: "03.jpg", title: "Judith Beheading Holofernes", artist: "Caravaggio", liked: true },
-    { image: "04.jpg", title: "David with the Head of Goliath", artist: "Caravaggio", liked: false },
+    { image: "03.jpg", title: "David with the Head of Goliath", artist: "Caravaggio", liked: true },
+    { image: "04.jpg", title: "The Entombment of Christ", artist: "Caravaggio", liked: false },
     { image: "05.jpg", title: "Judith Beheading Holofernes", artist: "Caravaggio", liked: true },
     { image: "06.jpg", title: "Café Terrace at Night", artist: "Vincent van Gogh", liked: false },
     { image: "07.jpg", title: "Wheatfield with Crows", artist: "Vincent van Gogh", liked: true },
@@ -33,7 +33,6 @@ const artworks = [
     { image: "27.jpg", title: "Self-portrait", artist: "Rembrandt", liked: true },
     { image: "28.jpg", title: "The Night Watch", artist: "Rembrandt", liked: false },
     { image: "29.jpg", title: "Portrait of Wally", artist: "Egon Schiele", liked: true },
-    { image: "30.jpg", title: "Self-Portrait with Chinese Lantern Plant", artist: "Egon Schiele", liked: false },
   ];
 
   export default artworks;
