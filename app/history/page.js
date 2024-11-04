@@ -1,10 +1,20 @@
-// app/my/page.js
+// app/history/page.js
 
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
 import app from './../firebaseConfig';
-import { collection, getDocs, orderBy, query, getFirestore, startAfter, limit, doc, getDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  getDocs, 
+  orderBy, 
+  query, 
+  getFirestore, 
+  startAfter, 
+  limit, 
+  doc, 
+  getDoc 
+} from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ArtModal from '../components/ArtModal';
@@ -17,7 +27,7 @@ export default function HistoryPage() {
   const [selectedArt, setSelectedArt] = useState(null);
   const db = getFirestore(app);
 
-  // Firestore에서 데이터 불러오기 함수
+  // Fetch chat history and associated artwork details
   const fetchHistory = useCallback(async () => {
     if (loading || isEnd) return;
 
@@ -43,24 +53,29 @@ export default function HistoryPage() {
       const data = await Promise.all(
         querySnapshot.docs.map(async (docSnap) => {
           const chatData = docSnap.data();
-          
-          // 작품의 제목과 작가 이름을 가져오기 위해 artworks 컬렉션에서 imageID 기반으로 데이터 조회
+
+          // Fetch artwork data if imageID is available
           if (chatData.imageID) {
-            const artworkRef = doc(db, "artworks", chatData.imageID); // 여기에서 db를 사용하여 doc을 호출
-            const artworkSnap = await getDoc(artworkRef);
-            
-            if (artworkSnap.exists()) {
-              const artworkData = artworkSnap.data();
-              return {
-                id: docSnap.id,
-                ...chatData,
-                title: artworkData.title,
-                artist: artworkData.artist,
-              };
+            try {
+              const artworkRef = doc(db, "artworks", chatData.imageID);
+              const artworkSnap = await getDoc(artworkRef);
+
+              if (artworkSnap.exists()) {
+                const artworkData = artworkSnap.data();
+                return {
+                  id: docSnap.id,
+                  ...chatData,
+                  title: artworkData.title,
+                  artist: artworkData.artist,
+                  imageUrl:artworkData.imageUrl,
+                };
+              }
+            } catch (error) {
+              console.error("Error fetching artwork data:", error);
             }
           }
-          
-          // artwork 데이터를 찾지 못한 경우 기본 데이터만 사용
+
+          // If artwork data not found, return chat data as is
           return {
             id: docSnap.id,
             ...chatData,
@@ -140,7 +155,7 @@ export default function HistoryPage() {
   );
 }
 
-// 개별 기록 컴포넌트
+// History entry component
 function HistoryEntry({ entry, onClick, formatTimestamp }) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -149,7 +164,7 @@ function HistoryEntry({ entry, onClick, formatTimestamp }) {
       <div style={styles.imageContainer}>
         <img
           src={isImageLoaded ? entry.imageUrl : "/loading-placeholder.png"}
-          alt={entry.title}
+          alt={entry.title || "Untitled"}
           style={styles.image}
           onLoad={() => setIsImageLoaded(true)}
         />

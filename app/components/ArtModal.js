@@ -19,21 +19,26 @@ export default function ArtModal({ art, onClose }) {
   // Firestore에 대화 저장 함수
   const saveChatHistory = async (question, answer, examples) => {
     try {
-      await addDoc(collection(db, "chatHistory"), {
+      const dataToSave = {
         timestamp: serverTimestamp(),
-        imageUrl: art.imageUrl,
+        imageUrl: art.imageUrl, // Firebase에서 전달받은 이미지 URL로 저장
         title: art.title,
         artist: art.artist,
-        imageID: art.id, // 작품 ID 저장
         question: question,
         answer: answer,
         examples: examples.slice(1, 4),
-      });
+      };
+
+      // Only include imageID if it's defined
+      if (art.imageID) {
+        dataToSave.imageID = art.imageID;
+      }
+
+      await addDoc(collection(db, "chatHistory"), dataToSave);
     } catch (error) {
       console.error("Error saving chat history:", error);
     }
   };
-
   // AI 시작 버튼 클릭 시
   const handleStartAI = async () => {
     setIsAIStarted(true);
@@ -42,7 +47,7 @@ export default function ArtModal({ art, onClose }) {
 
     const { answer, questionExamples } = await fetchChatGPTResponse({
       role: "system",
-      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 15 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 20 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
     }, initialQuestion);
 
     setChatHistory((prevHistory) =>
@@ -63,7 +68,7 @@ export default function ArtModal({ art, onClose }) {
 
     const { answer, questionExamples } = await fetchChatGPTResponse({
       role: "system",
-      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 15 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 20 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
     }, fullExample);
 
     setChatHistory((prevHistory) =>
@@ -88,7 +93,7 @@ export default function ArtModal({ art, onClose }) {
 
     const { answer, questionExamples } = await fetchChatGPTResponse({
       role: "system",
-      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 15 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
+      content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 20 sentences. Include exactly three related questions as examples, without any introductory text, numbering, or leading characters.",
     }, fullUserQuestion);
 
     setChatHistory((prevHistory) =>
