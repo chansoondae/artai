@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   }
 
   const { question, artistName, artworkTitle } = req.body;
+  const { messages } = req.body; // 이전 메시지 히스토리를 클라이언트에서 받습니다.
 
   try {
     const completion = await openai.chat.completions.create({
@@ -23,8 +24,9 @@ export default async function handler(req, res) {
         },
         { 
           role: "user", 
-          content: `작가: ${artistName}, 작품: ${artworkTitle}에 대한 작품 설명 부탁드립니다. ${question}` 
+          content: `작가: ${artistName}, 작품: ${artworkTitle}에 대한 작품 설명 부탁드립니다. ${question}`
         },
+        ...messages, // 기존 대화 히스토리를 포함합니다.
       ],
       max_tokens: 500,
       temperature: 0.7,

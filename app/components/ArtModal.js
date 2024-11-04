@@ -51,7 +51,7 @@ export default function ArtModal({ art, onClose }) {
   };
 
   const handleExampleClick = async (example) => {
-    const userQuestion = `작가: ${art.artist}, 작품: ${art.title}과 관련된 질문입니다. 다음에 나올 질문에 대한 답변만 해주세요.: ${example}`;
+    const userQuestion = example;
     setChatHistory([...chatHistory, { question: example, answer: '생각중...', loading: true }]);
 
     const { answer, questionExamples } = await fetchChatGPTResponse(userQuestion, art.artist, art.title);
@@ -70,7 +70,7 @@ export default function ArtModal({ art, onClose }) {
     if (!chatInput.trim()) return;
 
     const userQuestion = chatInput.trim();
-    const fullUserQuestion = `작가: ${art.artist}, 작품: ${art.title}과 관련된 질문입니다. 다음에 나올 질문에 대한 답변만 해주세요.: ${userQuestion}`;
+    const fullUserQuestion = userQuestion;
     setChatHistory([...chatHistory, { question: userQuestion, answer: '생각중...', loading: true }]);
     setChatInput('');
 
