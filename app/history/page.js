@@ -178,7 +178,7 @@ function HistoryEntry({ entry, onClick, formatTimestamp }) {
       {entry.examples && entry.examples.length > 0 && (
         <div style={styles.examples}>
           <p><strong>Related Questions:</strong></p>
-          <ul style={{ listStyleType: 'none'}}>
+          <ul>
             {entry.examples.map((example, idx) => (
               <li key={idx}>{example}</li>
             ))}
