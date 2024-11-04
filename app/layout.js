@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './globals.css';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
+import Head from 'next/head';
 
 export const metadata = {
   title: 'Art Friends - AI Docent',
@@ -12,13 +13,32 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <Header />
+      <Head>
+        {/* 기본 메타 정보 */}
+        <title>{metadata.title}</title>
+        <meta name="description" content={metadata.description} />
+
+        {/* Open Graph 메타 태그 */}
+        <meta property="og:title" content={metadata.title} />
+        <meta property="og:description" content={metadata.description} />
+        <meta property="og:image" content="https://www.artfrnd.com/01.jpg" /> {/* 썸네일 이미지 URL */}
+        <meta property="og:url" content="https://www.artfrnd.com" />
+        <meta property="og:type" content="website" />
+
+        {/* Twitter Card 메타 태그 */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metadata.title} />
+        <meta name="twitter:description" content={metadata.description} />
+        <meta name="twitter:image" content="https://www.artfrnd.com/01.jpg" /> {/* 썸네일 이미지 URL */}
+
+        {/* 구글 폰트 링크 */}
         <link
           href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap"
           rel="stylesheet"
         />
-        <div style={styles.placeholder} /> {/* 헤더 높이만큼의 공간 추가 */}
+      </Head>
+      <body>
+        <Header />
         <div style={styles.container}>
           {children}
         </div>
@@ -29,9 +49,6 @@ export default function RootLayout({ children }) {
 }
 
 const styles = {
-  placeholder: {
-    height: '70px', // 고정된 헤더의 높이와 동일한 높이로 여백을 추가합니다.
-  },
   container: {
     maxWidth: '900px',
     margin: '0 auto',
