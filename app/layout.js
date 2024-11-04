@@ -54,5 +54,7 @@ const styles = {
     margin: '0 auto',
     width: '100%',
     paddingBottom: '60px', // Bottom navigation을 위한 여백 추가
+    paddingTop: "70px", // 고정된 헤더의 높이만큼 여백 추가
+    paddingBottom: "60px", // 하단의 BottomNav 여백 추가
   },
 };
