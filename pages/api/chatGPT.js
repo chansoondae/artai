@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       messages: [
         { 
           role: "system", 
-          content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 10 sentences. Then, Provide exactly three related questions as examples.Please mark '++##++'' between the answer and the expected question and make 3 questions with <1>, <2>, and <3>." 
+          content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 3 to 10 sentences. Then, Provide exactly three related questions as examples.Please mark '++##++'' between the answer and the expected question and make 3 questions with <1>, <2>, and <3>." 
         },
         { 
           role: "user", 
