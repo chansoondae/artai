@@ -1,5 +1,6 @@
 // app/components/Header.js
 import React from 'react';
+import Link from 'next/link'; // Link 컴포넌트 추가
 // import { signInWithGoogle, logout } from '../firebaseConfig'; // 로그인 관련 코드 비활성화
 // import { AiOutlineLogin } from 'react-icons/ai'; // 로그인 아이콘 비활성화
 
@@ -23,7 +24,9 @@ export default function Header() {
     <header style={styles.header}>
       <div style={styles.headerContent}>
         <div style={styles.titleContainer}>
-          <h1 style={styles.title}>Art Friends</h1>
+          <Link href="/" passHref style={styles.title}>
+            Art Friends
+          </Link>
         </div>
         {/* 로그인 버튼 및 프로필 사진 UI 비활성화 */}
         {/* <div style={styles.userContainer}>
@@ -47,8 +50,15 @@ export default function Header() {
 
 const styles = {
   header: {
+    position: 'fixed', // 헤더를 고정시킵니다.
+    top: 0, // 화면 상단에 고정
+    left: 0,
+    right: 0,
+    height: '70px', // 고정된 헤더의 높이를 설정합니다.
     padding: '10px 20px',
     borderBottom: '1px solid #ccc',
+    backgroundColor: '#fff', // 배경색을 추가해 가독성을 높입니다.
+    zIndex: 1000, // 다른 콘텐츠보다 위에 보이도록 설정
   },
   headerContent: {
     maxWidth: '900px',
@@ -67,7 +77,8 @@ const styles = {
     fontSize: '2.5rem',
     color: '#333',
     margin: 0,
-    // cursor: 'pointer',
+    cursor: 'pointer',
+    textDecoration: 'none',
   },
   // 로그인 관련 스타일 비활성화
   // userContainer: {

@@ -1,12 +1,11 @@
 // app/page.js
 
-"use client"
+"use client";
 
 import { useEffect, useState } from 'react';
 import ImageGrid from './components/ImageGrid';
 import ArtModal from './components/ArtModal';
-import app from './firebaseConfig';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { fetchArtworks } from './firebaseService'; // firebaseService에서 불러오기
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function HomePage() {
@@ -16,27 +15,18 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [itemsToShow, setItemsToShow] = useState(15); // 처음에 보여줄 작품 수
-  const db = getFirestore(app);
+
 
   // Firestore에서 모든 작품 데이터를 불러오기
   useEffect(() => {
-    const fetchArtworks = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "artworks"));
-        const artworksData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setAllArtworks(artworksData);
-        setDisplayedArtworks(artworksData.slice(0, itemsToShow));
-      } catch (error) {
-        console.error("Error fetching artworks:", error);
-      } finally {
-        setLoading(false);
-      }
+    const loadArtworks = async () => {
+      const artworksData = await fetchArtworks();
+      setAllArtworks(artworksData);
+      setDisplayedArtworks(artworksData.slice(0, itemsToShow));
+      setLoading(false);
     };
 
-    fetchArtworks();
+    loadArtworks();
   }, []);
 
   // 무한 스크롤 처리

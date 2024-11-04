@@ -4,8 +4,7 @@
 import { useState, useEffect } from 'react';
 import { AiOutlineSearch } from 'react-icons/ai';
 import ArtModal from '../components/ArtModal';
-import app from './../firebaseConfig';
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { fetchArtworks } from './../firebaseService'; // firebaseService에서 불러오기
 
 export default function SearchPage() {
   const [query, setQuery] = useState(''); // 검색어 상태
@@ -14,23 +13,14 @@ export default function SearchPage() {
   const [selectedArt, setSelectedArt] = useState(null); // 선택된 작품
   const [relatedArtworks, setRelatedArtworks] = useState([]); // 같은 작가의 다른 작품들
   const [showModal, setShowModal] = useState(false); // 모달 표시 상태
-  const db = getFirestore(app);
 
   // Firestore에서 작품 데이터 불러오기
   useEffect(() => {
-    const fetchArtworks = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "artworks"));
-        const artworksData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setAllArtworks(artworksData);
-      } catch (error) {
-        console.error("Error fetching artworks:", error);
-      }
+    const loadArtworks = async () => {
+      const artworksData = await fetchArtworks();
+      setAllArtworks(artworksData);
     };
-    fetchArtworks();
+    loadArtworks();
   }, []);
 
   // 검색어가 변경될 때마다 자동 완성 결과 필터링
@@ -72,7 +62,9 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container" style={styles.pageContainer}>
+      <div style={styles.placeholder} /> {/* 고정된 헤더 높이만큼의 공간 추가 */}
+
       {/* 검색 입력 필드 */}
       <div className="row justify-content-center mb-4">
         <div className="col-md-8 col-lg-6">
@@ -166,3 +158,9 @@ export default function SearchPage() {
     </div>
   );
 }
+
+const styles = {
+  pageContainer: {
+    paddingTop: '70px', // 헤더 높이만큼의 패딩을 추가하여 콘텐츠가 겹치지 않도록 합니다.
+  },
+};
