@@ -12,12 +12,13 @@ export default function ArtworkDetailPage() {
     artist: '',
     location: '',
     year: '',
-    imageUrl: ''
+    imageUrl: '',
+    category: 'main', // 기본 카테고리 설정
   });
   const [loading, setLoading] = useState(true);
   const db = getFirestore(app);
   const { artworkId } = useParams();
-  const router = useRouter(); // useRouter 훅 사용하여 경로 이동
+  const router = useRouter();
 
   useEffect(() => {
     const fetchArtwork = async () => {
@@ -66,6 +67,7 @@ export default function ArtworkDetailPage() {
         artist: artwork.artist,
         location: artwork.location,
         year: artwork.year,
+        category: artwork.category,
       });
       alert("Artwork updated successfully!");
     } catch (error) {
@@ -167,6 +169,55 @@ export default function ArtworkDetailPage() {
               onChange={handleInputChange}
               className="form-control"
             />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Category</label>
+            <div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="category"
+                  value="main"
+                  checked={artwork.category === 'main'}
+                  onChange={handleInputChange}
+                />
+                <label className="form-check-label">Main</label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="category"
+                  value="caravaggio"
+                  checked={artwork.category === 'caravaggio'}
+                  onChange={handleInputChange}
+                />
+                <label className="form-check-label">Caravaggio</label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="category"
+                  value="gogh"
+                  checked={artwork.category === 'gogh'}
+                  onChange={handleInputChange}
+                />
+                <label className="form-check-label">Gogh</label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="category"
+                  value="leopold"
+                  checked={artwork.category === 'leopold'}
+                  onChange={handleInputChange}
+                />
+                <label className="form-check-label">Leopold</label>
+              </div>
+            </div>
           </div>
           <button onClick={handleSaveChanges} className="btn btn-primary w-100">
             Save Changes

@@ -1,5 +1,3 @@
-// app/page.js
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -16,11 +14,11 @@ export default function HomePage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [itemsToShow, setItemsToShow] = useState(15); // 처음에 보여줄 작품 수
 
-
-  // Firestore에서 모든 작품 데이터를 불러오기
+  // Firestore에서 카테고리가 "main"인 작품 데이터를 불러오기
   useEffect(() => {
     const loadArtworks = async () => {
-      const artworksData = await fetchArtworks();
+      // "main" 카테고리의 작품만 가져오기 위해 fetchArtworks 함수 호출 시 "main" 전달
+      const artworksData = await fetchArtworks("main");
       setAllArtworks(artworksData);
       setDisplayedArtworks(artworksData.slice(0, itemsToShow));
       setLoading(false);

@@ -1,4 +1,3 @@
-// app/upload/page.js
 "use client";
 
 import React, { useState } from 'react';
@@ -14,6 +13,7 @@ export default function UploadPage() {
   const [title, setTitle] = useState('');
   const [year, setYear] = useState('');
   const [location, setLocation] = useState('');
+  const [category, setCategory] = useState('main'); // 기본적으로 "main"이 선택됨
   const [isUploading, setIsUploading] = useState(false);
   const db = getFirestore(app);
   const storage = getStorage(app);
@@ -81,7 +81,6 @@ export default function UploadPage() {
 
       // Firestore에 데이터 추가 (timestamp, lastModified, read, likes, priority 필드 추가)
       await addDoc(collection(db, "artworks"), {
-        id: uniqueId,
         artist,
         title,
         year: year || null,
@@ -92,6 +91,7 @@ export default function UploadPage() {
         read: 0,           // 초기 조회수 0
         likes: 0,          // 초기 좋아요 수 0
         priority: 0,       // 초기 우선 순위 0
+        category,          // 선택한 카테고리를 저장
       });
 
       alert("작품이 성공적으로 업로드되었습니다.");
@@ -100,6 +100,7 @@ export default function UploadPage() {
       setTitle('');
       setYear('');
       setLocation('');
+      setCategory('main');
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("업로드 중 오류가 발생했습니다.");
@@ -162,6 +163,56 @@ export default function UploadPage() {
             onChange={(e) => setLocation(e.target.value)} 
             placeholder="소장처를 입력하세요" 
           />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">카테고리 선택</label>
+          <div>
+            <div className="form-check">
+              <input 
+                className="form-check-input" 
+                type="radio" 
+                name="category" 
+                value="main" 
+                checked={category === 'main'} 
+                onChange={(e) => setCategory(e.target.value)} 
+              />
+              <label className="form-check-label">Main</label>
+            </div>
+            <div className="form-check">
+              <input 
+                className="form-check-input" 
+                type="radio" 
+                name="category" 
+                value="caravaggio" 
+                checked={category === 'caravaggio'} 
+                onChange={(e) => setCategory(e.target.value)} 
+              />
+              <label className="form-check-label">Caravaggio</label>
+            </div>
+            <div className="form-check">
+              <input 
+                className="form-check-input" 
+                type="radio" 
+                name="category" 
+                value="gogh" 
+                checked={category === 'gogh'} 
+                onChange={(e) => setCategory(e.target.value)} 
+              />
+              <label className="form-check-label">Gogh</label>
+            </div>
+            <div className="form-check">
+              <input 
+                className="form-check-input" 
+                type="radio" 
+                name="category" 
+                value="leopold" 
+                checked={category === 'leopold'} 
+                onChange={(e) => setCategory(e.target.value)} 
+              />
+              <label className="form-check-label">Leopold</label>
+            </div>
+          </div>
         </div>
         
         <button 

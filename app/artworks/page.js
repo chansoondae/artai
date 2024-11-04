@@ -3,24 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import app from "./../firebaseConfig";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { fetchArtworks } from "./../firebaseService";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function ArtworksPage() {
   const [artworks, setArtworks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const db = getFirestore(app);
+  const [category, setCategory] = useState("all"); // 기본적으로 "all" 선택
 
   useEffect(() => {
-    const fetchArtworks = async () => {
+    const loadArtworks = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "artworks"));
-        const artworksData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        setLoading(true);
+        const artworksData = category === "all" ? await fetchArtworks() : await fetchArtworks(category);
         setArtworks(artworksData);
-        console.log(artworksData);
       } catch (error) {
         console.error("Error fetching artworks:", error);
       } finally {
@@ -28,8 +24,12 @@ export default function ArtworksPage() {
       }
     };
 
-    fetchArtworks();
-  }, []);
+    loadArtworks();
+  }, [category]);
+
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
 
   if (loading) {
     return (
@@ -43,6 +43,69 @@ export default function ArtworksPage() {
 
   return (
     <div style={styles.pageContainer}>
+      <div className="mb-4">
+        <div className="form-check form-check-inline">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="category"
+            value="all"
+            checked={category === "all"}
+            onChange={handleCategoryChange}
+          />
+          <label className="form-check-label">All</label>
+        </div>
+        <div className="form-check form-check-inline">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="category"
+            value="main"
+            checked={category === "main"}
+            onChange={handleCategoryChange}
+          />
+          <label className="form-check-label">Main</label>
+        </div>
+        <div className="form-check form-check-inline">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="category"
+            value="caravaggio"
+            checked={category === "caravaggio"}
+            onChange={handleCategoryChange}
+          />
+          <label className="form-check-label">Caravaggio</label>
+        </div>
+        <div className="form-check form-check-inline">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="category"
+            value="gogh"
+            checked={category === "gogh"}
+            onChange={handleCategoryChange}
+          />
+          <label className="form-check-label">Gogh</label>
+        </div>
+        <div className="form-check form-check-inline">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="category"
+            value="leopold"
+            checked={category === "leopold"}
+            onChange={handleCategoryChange}
+          />
+          <label className="form-check-label">Leopold</label>
+        </div>
+      </div>
+
+      {/* 총 작품 수 표시 */}
+      <div className="mb-3">
+        <h5>총 작품 수: {artworks.length}</h5>
+      </div>
+
       <div className="list-group">
         {artworks.map((artwork) => (
           <Link
@@ -83,14 +146,17 @@ export default function ArtworksPage() {
                 {artwork.title ? artwork.title : <span style={{ color: 'red' }}>undefined</span>}
               </h5>
               <p className="mb-0">
-                Artist: {artwork.artist ? artwork.artist : <span style={{ color: 'red' }}>undefined</span>}
+                👤 Artist: {artwork.artist ? artwork.artist : <span style={{ color: 'red' }}>undefined</span>}
               </p>
               <p className="mb-0">
-                Location: {artwork.location ? artwork.location : <span style={{ color: 'red' }}>undefined</span>}
+                📍 Location: {artwork.location ? artwork.location : <span style={{ color: 'red' }}>undefined</span>}
               </p>
               <p className="mb-0">
-                Year: {artwork.year ? artwork.year : <span style={{ color: 'red' }}>undefined</span>}
+                🗓️ Year: {artwork.year ? artwork.year : <span style={{ color: 'red' }}>undefined</span>}
               </p>
+              {/* <p className="mb-0">
+                Category: {artwork.category ? artwork.category : <span style={{ color: 'red' }}>undefined</span>}
+              </p> */}
             </div>
           </Link>
         ))}
@@ -104,7 +170,7 @@ const styles = {
     maxWidth: "900px",
     margin: "0 auto",
     width: "100%",
-    paddingTop: "20px", // 고정된 헤더의 높이만큼 여백 추가
+    paddingTop: "20px",
     paddingBottom: "60px", // 하단의 BottomNav 여백 추가
   },
 };
