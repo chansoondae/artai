@@ -171,11 +171,11 @@ function HistoryEntry({ entry, onClick, formatTimestamp }) {
         />
       </div>
       <h3 style={styles.title}>{entry.title || "Untitled"}</h3>
-      <p style={styles.artist}>Artist: {entry.artist || "Unknown"}</p>
+      <p style={styles.artist}>{entry.artist || "Unknown"}</p>
       <p style={styles.timestamp}>Written: {formatTimestamp(entry.timestamp)}</p>
       <p style={styles.question}><strong>Question:</strong> {entry.question}</p>
       <p style={styles.answer}><strong>Answer:</strong> {entry.answer}</p>
-      {entry.examples && entry.examples.length > 0 && (
+      {/* {entry.examples && entry.examples.length > 0 && (
         <div style={styles.examples}>
           <p><strong>Related Questions:</strong></p>
           <ul>
@@ -184,7 +184,7 @@ function HistoryEntry({ entry, onClick, formatTimestamp }) {
             ))}
           </ul>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
