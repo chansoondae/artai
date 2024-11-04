@@ -68,6 +68,7 @@ export default function HistoryPage() {
                   title: artworkData.title,
                   artist: artworkData.artist,
                   imageUrl:artworkData.imageUrl,
+                  imageID:chatData.imageID,
                 };
               }
             } catch (error) {

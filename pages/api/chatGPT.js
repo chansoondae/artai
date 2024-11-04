@@ -19,14 +19,14 @@ export default async function handler(req, res) {
       messages: [
         { 
           role: "system", 
-          content: "You are a knowledgeable exhibition docent. Provide brief responses in Korean and include exactly three related questions as examples, without any introductory text, numbering, or leading characters." 
+          content: "You are a knowledgeable exhibition docent. Provide detailed responses in Korean, aiming for 5 to 10 sentences. Then, Provide exactly three related questions as examples.Please mark '++##++'' between the answer and the expected question and make 3 questions with <1>, <2>, and <3>." 
         },
         { 
           role: "user", 
-          content: `작가: ${artistName}, 작품: ${artworkTitle}에 대한 전시해설을 부탁드립니다. ${question}` 
+          content: `작가: ${artistName}, 작품: ${artworkTitle}에 대한 작품 설명 부탁드립니다. ${question}` 
         },
       ],
-      max_tokens: 200,
+      max_tokens: 500,
       temperature: 0.7,
     });
     
@@ -34,7 +34,13 @@ export default async function handler(req, res) {
     const responseText = completion.choices[0]?.message?.content.trim();
 
     // ChatGPT 응답을 파싱하여 답변과 질문 예시 3개를 추출
-    const [answer, ...questionExamples] = responseText.split("\n").filter(Boolean);
+    // const [answer, ...questionExamples] = responseText.split("\n").filter(Boolean);
+    const [answer, rawQuestions] = responseText.split("++##++").map(text => text.trim());
+
+    // Process rawQuestions by splitting based on <1>, <2>, <3> markers to form the array
+    const questionExamples = rawQuestions
+    ? rawQuestions.split(/<\d+>/).filter(Boolean).map(question => question.trim())
+    : []; // If rawQuestions is empty or undefined, default to an empty array
 
     res.status(200).json({ answer, questionExamples });
   } catch (error) {
