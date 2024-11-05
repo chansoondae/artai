@@ -108,9 +108,8 @@ export default function ArtworksPage() {
 
       <div className="list-group">
         {artworks.map((artwork) => (
-          <Link
+          <div
             key={artwork.id}
-            href={`/artworks/${artwork.id}`}
             className="list-group-item list-group-item-action d-flex align-items-center"
             style={{ textDecoration: "none", color: "inherit" }}
           >
@@ -158,7 +157,7 @@ export default function ArtworksPage() {
                 Category: {artwork.category ? artwork.category : <span style={{ color: 'red' }}>undefined</span>}
               </p> */}
             </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>
