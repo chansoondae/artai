@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, serverTimestamp, getFirestore } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getFirestore, doc, getDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from 'uuid';
+import DOMPurify from 'dompurify'; // Input sanitization을 위해 사용
 import app from './../firebaseConfig';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -15,8 +17,34 @@ export default function UploadPage() {
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('main'); // 기본적으로 "main"이 선택됨
   const [isUploading, setIsUploading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const auth = getAuth(app);
   const db = getFirestore(app);
   const storage = getStorage(app);
+
+  useEffect(() => {
+    // 로그인 상태 확인
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        // Firestore에서 관리자 여부 확인
+        const adminRef = doc(db, "admins", user.uid);
+        const adminDoc = await getDoc(adminRef);
+        
+        if (adminDoc.exists()) {
+          setIsAdmin(true);
+        } else {
+          alert("관리자 권한이 없습니다.");
+          setIsAdmin(false);
+        }
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, db]);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -51,7 +79,7 @@ export default function UploadPage() {
             height = maxHeight;
           }
         }
-        
+
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
@@ -73,6 +101,12 @@ export default function UploadPage() {
     setIsUploading(true);
 
     try {
+      // Input sanitization using DOMPurify to prevent XSS
+      const sanitizedArtist = DOMPurify.sanitize(artist);
+      const sanitizedTitle = DOMPurify.sanitize(title);
+      const sanitizedYear = DOMPurify.sanitize(year);
+      const sanitizedLocation = DOMPurify.sanitize(location);
+
       const uniqueId = uuidv4();
       const storageRef = ref(storage, `artworks/${uniqueId}.jpg`);
       const blob = await fetch(filePreview).then(r => r.blob());
@@ -81,10 +115,10 @@ export default function UploadPage() {
 
       // Firestore에 데이터 추가 (timestamp, lastModified, read, likes, priority 필드 추가)
       await addDoc(collection(db, "artworks"), {
-        artist,
-        title,
-        year: year || null,
-        location: location || null,
+        artist: sanitizedArtist,
+        title: sanitizedTitle,
+        year: sanitizedYear || null,
+        location: sanitizedLocation || null,
         imageUrl: downloadURL,
         timestamp: serverTimestamp(),
         lastModified: serverTimestamp(),
@@ -109,6 +143,35 @@ export default function UploadPage() {
     setIsUploading(false);
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error during login:", error);
+      alert("Failed to log in. Please try again.");
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="container mt-5 p-4 shadow-sm rounded bg-light" style={{ maxWidth: '600px' }}>
+        <h2 className="text-center mb-4">로그인이 필요합니다</h2>
+        <div className="text-center">
+          <button onClick={handleGoogleLogin} className="btn btn-primary">Sign in with Google</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="container mt-5 p-4 shadow-sm rounded bg-light" style={{ maxWidth: '600px' }}>
+        <h2 className="text-center mb-4" style={{ color: "red" }}>관리자 권한이 없습니다</h2>
+      </div>
+    );
+  }
+
   return (
     <div className="container mt-5 p-4 shadow-sm rounded bg-light" style={{ maxWidth: '600px' }}>
       <h2 className="text-center mb-4">작품 업로드</h2>
@@ -120,7 +183,7 @@ export default function UploadPage() {
             <img src={filePreview} alt="미리보기" className="img-thumbnail mt-3 w-100" />
           )}
         </div>
-        
+
         <div className="mb-3">
           <label className="form-label">작가 이름</label>
           <input 
@@ -131,7 +194,7 @@ export default function UploadPage() {
             placeholder="작가 이름을 입력하세요" 
           />
         </div>
-        
+
         <div className="mb-3">
           <label className="form-label">작품 제목</label>
           <input 
@@ -142,7 +205,7 @@ export default function UploadPage() {
             placeholder="작품 제목을 입력하세요" 
           />
         </div>
-        
+
         <div className="mb-3">
           <label className="form-label">제작 연도 (선택 사항)</label>
           <input 
@@ -153,7 +216,7 @@ export default function UploadPage() {
             placeholder="제작 연도를 입력하세요" 
           />
         </div>
-        
+
         <div className="mb-3">
           <label className="form-label">소장처 (선택 사항)</label>
           <input 
@@ -214,7 +277,7 @@ export default function UploadPage() {
             </div>
           </div>
         </div>
-        
+
         <button 
           type="button" 
           className="btn btn-primary w-100" 
