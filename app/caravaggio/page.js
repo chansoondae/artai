@@ -1,14 +1,15 @@
-// app/page.js
+// app/caravaggio/page.js
 
 "use client"
 
+
 import { useEffect, useState, useRef } from 'react';
-import ImageGrid from './components/ImageGrid';
-import ArtModal from './components/ArtModal';
-import { fetchArtworks } from './firebaseService'; // firebaseService에서 불러오기
+import ImageGrid from '../components/ImageGrid';
+import ArtModal from '../components/ArtModal';
+import { fetchArtworks } from '../firebaseService'; // firebaseService에서 불러오기
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-export default function HomePage() {
+export default function CaravaggioPage() {
   const [allArtworks, setAllArtworks] = useState([]);
   const [displayedArtworks, setDisplayedArtworks] = useState([]);
   const [selectedArt, setSelectedArt] = useState(null);
@@ -17,11 +18,11 @@ export default function HomePage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const observerRef = useRef(null);
 
-  // 데이터를 불러오기 (에러 핸들링 포함)
+  // 데이터를 불러오기 (카테고리: 'caravaggio')
   useEffect(() => {
     const loadArtworks = async () => {
       try {
-        const artworksData = await fetchArtworks('main');
+        const artworksData = await fetchArtworks('caravaggio');
         setAllArtworks(artworksData);
         setDisplayedArtworks(artworksData.slice(0, itemsToShow));
         setLoading(false);
