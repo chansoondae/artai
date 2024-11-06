@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   try {
     // 기존 대화 히스토리를 포함하여 새 메시지 생성
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-2024-08-06",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
