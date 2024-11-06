@@ -241,10 +241,20 @@ const styles = {
   question: {
     fontSize: '1rem',
     marginBottom: '5px',
+    padding: '10px',
+    backgroundColor: '#e7f3fe', // Question 배경색
+    borderRadius: '5px',
+    borderLeft: '4px solid #007bff', // 왼쪽 색 강조
   },
   answer: {
     fontSize: '1rem',
     color: '#333',
     marginBottom: '10px',
+    padding: '10px',
+    backgroundColor: '#f1f1f1', // Answer 배경색
+    borderRadius: '5px',
+    borderLeft: '4px solid #28a745', // 왼쪽 색 강조
   },
+  
 };
+

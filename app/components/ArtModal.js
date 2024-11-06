@@ -39,7 +39,6 @@ export default function ArtModal({ art, onClose }) {
 
   // messages 형식으로 변환하는 함수 추가
   const formatChatHistoryForMessages = (chatHistory) => {
-    console.log("history: ",chatHistory);
     return chatHistory.map((chat) => ({
       role: chat.question ? "user" : "assistant",
       content: chat.question || chat.answer,
@@ -93,7 +92,6 @@ export default function ArtModal({ art, onClose }) {
     if (!chatInput.trim()) return;
 
     const userQuestion = chatInput.trim();
-    console.log(userQuestion);
     setChatInput('');
 
     // 새로운 질문을 추가한 `chatHistory` 배열을 만들어서 최근 3개만 추출

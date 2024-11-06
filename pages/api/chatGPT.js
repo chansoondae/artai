@@ -9,13 +9,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Only POST requests are allowed' });
   }
 
-  // req.body 확인용 로그 추가
-  console.log("Request body received at server:", req.body);
-
   const { question, artistName, artworkTitle, imageUrl, messages = [] } = req.body;
 
-  // messages가 실제로 있는지 확인
-  console.log("messages in request body:", messages);
 
   try {
     // 기존 대화 히스토리를 포함하여 새 메시지 생성
