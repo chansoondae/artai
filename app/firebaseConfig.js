@@ -33,7 +33,7 @@ export const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
-    console.log("User logged in:", user);
+    // console.log("User logged in:", user);
     return user;
   } catch (error) {
     console.error("Error during Google login:", error);
@@ -43,7 +43,7 @@ export const signInWithGoogle = async () => {
 export const logout = async () => {
   try {
     await signOut(auth);
-    console.log("User logged out");
+    // console.log("User logged out");
   } catch (error) {
     console.error("Error during logout:", error);
   }
