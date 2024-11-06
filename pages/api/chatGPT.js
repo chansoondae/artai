@@ -26,12 +26,12 @@ export default async function handler(req, res) {
           role: "system",
           content: "You are a knowledgeable exhibition docent. Provide a detailed responses in Korean, ideally between 3 and 15 sentences. Then, provide exactly three related questions as examples. Please mark '++##++' between the answer and the expected questions and make 3 questions with <1>, <2>, and <3>."
         },
+        ...messages, // 기존 대화 히스토리를 추가합니다.
         {
           role: "user",
           content: question,
           // content: `작가: ${artistName}, 작품: ${artworkTitle}, 이미지 URL: ${imageUrl ? imageUrl : "없음"}. 이 작품 이미지 URL을 보고 작품에 대한 설명을 부탁드립니다. ${question}`
         },
-        ...messages, // 기존 대화 히스토리를 추가합니다.
       ],
       max_tokens: 1028,
       temperature: 0.7,

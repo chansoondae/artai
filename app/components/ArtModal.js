@@ -39,6 +39,7 @@ export default function ArtModal({ art, onClose }) {
 
   // messages 형식으로 변환하는 함수 추가
   const formatChatHistoryForMessages = (chatHistory) => {
+    console.log("history: ",chatHistory);
     return chatHistory.map((chat) => ({
       role: chat.question ? "user" : "assistant",
       content: chat.question || chat.answer,
@@ -51,12 +52,11 @@ export default function ArtModal({ art, onClose }) {
     const initialQuestion = `작가: ${art.artist}, 작품: ${art.title}에 대한 작품 해설을 부탁드립니다.`;
 
     // 초기 대화 추가
-    setChatHistory([{ question: initialQuestion, answer: '생각중...', loading: true }]);
+    const updatedChatHistory = [...chatHistory, { question: initialQuestion, answer: '생각중...', loading: true }];
+    setChatHistory(updatedChatHistory);
 
     // 메시지 형식으로 변환
-    const formattedMessages = formatChatHistoryForMessages([{ question: initialQuestion }]);
-
-
+    const formattedMessages = formatChatHistoryForMessages(updatedChatHistory);
     const { answer, questionExamples } = await fetchChatGPTResponse(initialQuestion, art.artist, art.title, formattedMessages);
 
     setChatHistory([{ question: initialQuestion, answer, loading: false }]);
@@ -102,8 +102,6 @@ export default function ArtModal({ art, onClose }) {
 
     // 최근 3개 메시지로 제한하여 서버로 전송
     const formattedMessages = formatChatHistoryForMessages(updatedChatHistory).slice(-3);
-  
-
     const { answer, questionExamples } = await fetchChatGPTResponse(userQuestion, art.artist, art.title, formattedMessages);
 
     setChatHistory((prevHistory) =>
