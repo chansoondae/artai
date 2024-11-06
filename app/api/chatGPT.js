@@ -1,13 +1,20 @@
 // app/api/chatGPT.js
 
-export async function fetchChatGPTResponse(question, artistName, artworkTitle) {
+export async function fetchChatGPTResponse(question, artistName, artworkTitle, messages = []) {
+    console.log("Request payload:", { question, artistName, artworkTitle, messages }); // messages 확인용 로그 추가
+
     try {
       const response = await fetch('/api/chatGPT', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question, artistName, artworkTitle }),
+        body: JSON.stringify({ 
+          question,
+          artistName,
+          artworkTitle,
+          messages, 
+        }),
       });
   
       const data = await response.json();

@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import app from './../firebaseConfig';
 import { 
   collection, 
@@ -13,7 +13,7 @@ import {
   startAfter, 
   limit, 
   doc, 
-  getDoc 
+  getDocs as batchedGetDocs // 변경: 데이터 배치로 가져오기
 } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -25,6 +25,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(false);
   const [isEnd, setIsEnd] = useState(false);
   const [selectedArt, setSelectedArt] = useState(null);
+  const observerRef = useRef(null);
   const db = getFirestore(app);
 
   // Fetch chat history and associated artwork details
@@ -50,25 +51,28 @@ export default function HistoryPage() {
         return;
       }
 
+      // Batched get artwork details for each chat history entry
       const data = await Promise.all(
         querySnapshot.docs.map(async (docSnap) => {
           const chatData = docSnap.data();
 
-          // Fetch artwork data if imageID is available
+          // Fetch artwork data if imageID is available in a batched way
           if (chatData.imageID) {
             try {
-              const artworkRef = doc(db, "artworks", chatData.imageID);
-              const artworkSnap = await getDoc(artworkRef);
+              const artworksRef = collection(db, "artworks");
+              const artworkQuery = query(artworksRef, limit(10)); // 데이터 배치로 가져오기
+              const artworkSnapshot = await batchedGetDocs(artworkQuery);
+              const artworkData = artworkSnapshot.docs.map((artDoc) => artDoc.data());
+              const matchedArtwork = artworkData.find((art) => art.imageID === chatData.imageID);
 
-              if (artworkSnap.exists()) {
-                const artworkData = artworkSnap.data();
+              if (matchedArtwork) {
                 return {
                   id: docSnap.id,
                   ...chatData,
-                  title: artworkData.title,
-                  artist: artworkData.artist,
-                  imageUrl:artworkData.imageUrl,
-                  imageID:chatData.imageID,
+                  title: matchedArtwork.title,
+                  artist: matchedArtwork.artist,
+                  imageUrl: matchedArtwork.imageUrl,
+                  imageID: chatData.imageID,
                 };
               }
             } catch (error) {
@@ -95,18 +99,29 @@ export default function HistoryPage() {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [fetchHistory]);
 
-  const handleScroll = () => {
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
-      fetchHistory();
-    }
-  };
-
+  // IntersectionObserver를 사용하여 무한 스크롤 구현
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    if (observerRef.current) observerRef.current.disconnect();
+
+    const handleObserver = (entries) => {
+      const target = entries[0];
+      if (target.isIntersecting) {
+        fetchHistory();
+      }
+    };
+
+    observerRef.current = new IntersectionObserver(handleObserver);
+    const triggerElement = document.querySelector('#load-more-trigger');
+    if (triggerElement) {
+      observerRef.current.observe(triggerElement);
+    }
+
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, [fetchHistory]);
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Unknown time";
@@ -152,6 +167,9 @@ export default function HistoryPage() {
       )}
 
       {selectedArt && <ArtModal art={selectedArt} onClose={handleCloseModal} />}
+
+      {/* 무한 스크롤 트리거 요소 */}
+      <div id="load-more-trigger" style={{ height: '20px' }}></div>
     </div>
   );
 }
@@ -175,16 +193,6 @@ function HistoryEntry({ entry, onClick, formatTimestamp }) {
       <p style={styles.timestamp}>Written: {formatTimestamp(entry.timestamp)}</p>
       <p style={styles.question}><strong>Question:</strong> {entry.question}</p>
       <p style={styles.answer}><strong>Answer:</strong> {entry.answer}</p>
-      {/* {entry.examples && entry.examples.length > 0 && (
-        <div style={styles.examples}>
-          <p><strong>Related Questions:</strong></p>
-          <ul>
-            {entry.examples.map((example, idx) => (
-              <li key={idx}>{example}</li>
-            ))}
-          </ul>
-        </div>
-      )} */}
     </div>
   );
 }
@@ -238,9 +246,5 @@ const styles = {
     fontSize: '1rem',
     color: '#333',
     marginBottom: '10px',
-  },
-  examples: {
-    fontSize: '0.9rem',
-    color: '#555',
   },
 };

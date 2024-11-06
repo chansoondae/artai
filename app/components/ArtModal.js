@@ -37,12 +37,27 @@ export default function ArtModal({ art, onClose }) {
     }
   };
 
+  // messages 형식으로 변환하는 함수 추가
+  const formatChatHistoryForMessages = (chatHistory) => {
+    return chatHistory.map((chat) => ({
+      role: chat.question ? "user" : "assistant",
+      content: chat.question || chat.answer,
+    }));
+  };
+
+  // AI를 시작하는 함수
   const handleStartAI = async () => {
     setIsAIStarted(true);
     const initialQuestion = `작가: ${art.artist}, 작품: ${art.title}에 대한 작품 해설을 부탁드립니다.`;
+
+    // 초기 대화 추가
     setChatHistory([{ question: initialQuestion, answer: '생각중...', loading: true }]);
 
-    const { answer, questionExamples } = await fetchChatGPTResponse(initialQuestion, art.artist, art.title);
+    // 메시지 형식으로 변환
+    const formattedMessages = formatChatHistoryForMessages([{ question: initialQuestion }]);
+
+
+    const { answer, questionExamples } = await fetchChatGPTResponse(initialQuestion, art.artist, art.title, formattedMessages);
 
     setChatHistory([{ question: initialQuestion, answer, loading: false }]);
     setQuestionExamples(questionExamples);
@@ -50,11 +65,18 @@ export default function ArtModal({ art, onClose }) {
     saveChatHistory(initialQuestion, answer, questionExamples);
   };
 
+  // 예시 클릭 시 호출되는 함수
   const handleExampleClick = async (example) => {
     const userQuestion = example;
-    setChatHistory([...chatHistory, { question: example, answer: '생각중...', loading: true }]);
 
-    const { answer, questionExamples } = await fetchChatGPTResponse(userQuestion, art.artist, art.title);
+    // 새로운 질문을 추가한 `chatHistory` 배열을 만들어서 최근 3개만 추출
+    const updatedChatHistory = [...chatHistory, { question: example, answer: '생각중...', loading: true }];
+    setChatHistory(updatedChatHistory);
+
+
+    // 현재 chatHistory를 messages로 변환하여 전달
+    const formattedMessages = formatChatHistoryForMessages(updatedChatHistory).slice(-3);
+    const { answer, questionExamples } = await fetchChatGPTResponse(userQuestion, art.artist, art.title, formattedMessages);
 
     setChatHistory((prevHistory) =>
       prevHistory.map((chat, index) =>
@@ -66,15 +88,23 @@ export default function ArtModal({ art, onClose }) {
     saveChatHistory(example, answer, questionExamples);
   };
 
+  // 질문 전송 시 호출되는 함수
   const handleSendQuestion = async () => {
     if (!chatInput.trim()) return;
 
     const userQuestion = chatInput.trim();
-    const fullUserQuestion = userQuestion;
-    setChatHistory([...chatHistory, { question: userQuestion, answer: '생각중...', loading: true }]);
+    console.log(userQuestion);
     setChatInput('');
 
-    const { answer, questionExamples } = await fetchChatGPTResponse(fullUserQuestion, art.artist, art.title);
+    // 새로운 질문을 추가한 `chatHistory` 배열을 만들어서 최근 3개만 추출
+    const updatedChatHistory = [...chatHistory, { question: userQuestion, answer: '생각중...', loading: true }];
+    setChatHistory(updatedChatHistory);
+
+    // 최근 3개 메시지로 제한하여 서버로 전송
+    const formattedMessages = formatChatHistoryForMessages(updatedChatHistory).slice(-3);
+  
+
+    const { answer, questionExamples } = await fetchChatGPTResponse(userQuestion, art.artist, art.title, formattedMessages);
 
     setChatHistory((prevHistory) =>
       prevHistory.map((chat, index) =>
