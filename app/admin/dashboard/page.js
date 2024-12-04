@@ -124,18 +124,18 @@ export default function AdminDashboard() {
 
     try {
       const docRef = doc(db, "artworks", editedArtwork.id);
-      const { title, artist, year, location, category } = editedArtwork;
-      await updateDoc(docRef, { title, artist, year, location, category });
+      const { title, artist, year, location, category, youtube } = editedArtwork;
+      await updateDoc(docRef, { title, artist, year, location, category, youtube });
       alert("Artwork updated successfully!");
 
       setAllArtworks((prevArtworks) =>
         prevArtworks.map((artwork) =>
-          artwork.id === editedArtwork.id ? { ...artwork, title, artist, year, location, category } : artwork
+          artwork.id === editedArtwork.id ? { ...artwork, title, artist, year, location, category, youtube } : artwork
         )
       );
       setFilteredArtworks((prevArtworks) =>
         prevArtworks.map((artwork) =>
-          artwork.id === editedArtwork.id ? { ...artwork, title, artist, year, location, category } : artwork
+          artwork.id === editedArtwork.id ? { ...artwork, title, artist, year, location, category, youtube } : artwork
         )
       );
 
@@ -291,6 +291,13 @@ export default function AdminDashboard() {
                   value={editedArtwork.year}
                   onChange={handleInputChange}
                 />
+                <input
+                  type="text"
+                  className="form-control mb-1"
+                  name="youtube"
+                  value={editedArtwork.youtube || ""}
+                  onChange={handleInputChange}
+                />
                 <div className="mb-2">
                   <label className="form-check form-check-inline me-3">
                     <input
@@ -345,6 +352,9 @@ export default function AdminDashboard() {
                 <p className="mb-1">📍 Location: {artwork.location}</p>
                 <p className="mb-1">🗓️ Year: {artwork.year}</p>
                 <p className="mb-1">📂 Category: {artwork.category}</p>
+                {artwork.youtube && (
+                  <p className="mb-1">🎥 유튜브: {artwork.youtube}</p>
+                )}
               </div>
             )}
 

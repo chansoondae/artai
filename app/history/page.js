@@ -166,7 +166,7 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {selectedArt && <ArtModal art={selectedArt} onClose={handleCloseModal} />}
+      {/* {selectedArt && <ArtModal art={selectedArt} onClose={handleCloseModal} />} */}
 
       {/* 무한 스크롤 트리거 요소 */}
       <div id="load-more-trigger" style={{ height: '20px' }}></div>

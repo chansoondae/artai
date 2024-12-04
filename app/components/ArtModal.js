@@ -135,6 +135,8 @@ export default function ArtModal({ art, onClose }) {
           <img src={art.imageUrl} alt={art.title} className={styles.image} />
           <h2 className={styles.title}>{art.title}</h2>
           <p className={styles.artist}>{art.artist}</p>
+          <p className="mb-1">🗓️ Year: {art.year}</p>
+          <p className="mb-3">📍 Location: {art.location}</p>
 
           {isAIStarted ? (
             <div className={styles.chatContainer}>

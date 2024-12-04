@@ -13,9 +13,13 @@ export default function UploadPage() {
   const [filePreview, setFilePreview] = useState(null);
   const [artist, setArtist] = useState('');
   const [title, setTitle] = useState('');
+  const [titleENG, setTitleENG] = useState('');
   const [year, setYear] = useState('');
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('main'); // 기본적으로 "main"이 선택됨
+  const [priority, setPriority] = useState(0);
+  const [voice, setVoice] = useState('');
+  const [description, setDescription] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -104,8 +108,11 @@ export default function UploadPage() {
       // Input sanitization using DOMPurify to prevent XSS
       const sanitizedArtist = DOMPurify.sanitize(artist);
       const sanitizedTitle = DOMPurify.sanitize(title);
+      const sanitizedTitleENG = DOMPurify.sanitize(titleENG);
       const sanitizedYear = DOMPurify.sanitize(year);
       const sanitizedLocation = DOMPurify.sanitize(location);
+      const sanitizedVoice = DOMPurify.sanitize(voice);
+      const sanitizedDescription = DOMPurify.sanitize(description);
 
       const uniqueId = uuidv4();
       const storageRef = ref(storage, `artworks/${uniqueId}.jpg`);
@@ -117,14 +124,17 @@ export default function UploadPage() {
       await addDoc(collection(db, "artworks"), {
         artist: sanitizedArtist,
         title: sanitizedTitle,
+        titleENG: sanitizedTitleENG,
         year: sanitizedYear || null,
         location: sanitizedLocation || null,
         imageUrl: downloadURL,
         timestamp: serverTimestamp(),
+        voice: sanitizedVoice,
+        description: sanitizedDescription,
         lastModified: serverTimestamp(),
         read: 0,           // 초기 조회수 0
         likes: 0,          // 초기 좋아요 수 0
-        priority: 0,       // 초기 우선 순위 0
+        priority,// 초기 우선 순위 0
         category,          // 선택한 카테고리를 저장
       });
 
@@ -132,9 +142,13 @@ export default function UploadPage() {
       setFilePreview(null);
       setArtist('');
       setTitle('');
+      setTitleENG('');
       setYear('');
       setLocation('');
       setCategory('main');
+      setPriority(0);
+      setVoice('');
+      setDescription('');
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("업로드 중 오류가 발생했습니다.");
@@ -205,7 +219,16 @@ export default function UploadPage() {
             placeholder="작품 제목을 입력하세요" 
           />
         </div>
-
+        <div className="mb-3">
+          <label className="form-label">작품 영문 제목</label>
+          <input 
+            type="text" 
+            className="form-control" 
+            value={titleENG} 
+            onChange={(e) => setTitleENG(e.target.value)} 
+            placeholder="작품 제목(영문)을 입력하세요" 
+          />
+        </div>
         <div className="mb-3">
           <label className="form-label">제작 연도 (선택 사항)</label>
           <input 
@@ -225,6 +248,38 @@ export default function UploadPage() {
             value={location} 
             onChange={(e) => setLocation(e.target.value)} 
             placeholder="소장처를 입력하세요" 
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">우선 순위 (선택 사항)</label>
+          <input 
+            type="number" 
+            className="form-control" 
+            value={priority} 
+            onChange={(e) => setPriority(Number(e.target.value))}
+            min="0"
+            max="100" 
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">나레이션</label>
+          <input 
+            type="text" 
+            className="form-control" 
+            value={voice} 
+            onChange={(e) => setVoice(e.target.value)} 
+            placeholder="나레이션 닉네임 입력하세요" 
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">작품 해설</label>
+          <textarea
+            className="form-control"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="작품해설"
+            rows="5" // 원하는 높이 (줄 수)
+            style={{ width: "100%" }} // CSS 스타일 적용
           />
         </div>
 
