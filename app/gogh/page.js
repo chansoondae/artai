@@ -221,7 +221,7 @@ export default function HomePage() {
             </div>
             <div className="flex-grow-1 m-3">
               <h5 className="mb-1">{art.title}</h5>
-              <p className="mb-1">👤 Artist: {art.artist}</p>
+              <p className="mb-1 text-muted">{art.artist}</p>
               <p className="mb-1">🗓️ Year: {art.year}</p>
               <p className="mb-1">
                 🎤 Voice:{" "}

@@ -65,22 +65,6 @@
   border-radius: 10px;
 }
 
-.title {
-  font-family: Georgia, serif;
-  font-size: 1.8rem;
-  font-weight: bold;
-  font-style: italic;
-  margin: 20px 0 10px;
-  color: #333;
-}
-
-.artist {
-  font-family: Arial, sans-serif;
-  font-size: 1.2rem;
-  color: #666;
-  margin-bottom: 20px;
-}
-
 .chatContainer {
   margin-top: 20px;
 }
