@@ -51,7 +51,7 @@ export default function HistoryPage() {
         return;
       }
 
-      console.log("Fetched count:", querySnapshot.docs.length);
+      // console.log("Fetched count:", querySnapshot.docs.length);
 
       // Batched get artwork details for each chat history entry
       const data = await Promise.all(
