@@ -4,6 +4,7 @@ import './globals.css';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
 import Head from 'next/head';
+import Script from 'next/script';
 
 export const metadata = {
   title: 'Art Friends - AI Docent',
@@ -36,6 +37,21 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap"
           rel="stylesheet"
         />
+        {/* Google Analytics Script */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENTID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENTID}', {
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
       </Head>
       <body>
         <Header />

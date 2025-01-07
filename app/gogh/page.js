@@ -9,6 +9,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { AiOutlineRobot, AiOutlineSend } from "react-icons/ai";
 import { fetchChatGPTResponse } from './../api/chatGPT';
 import app from './../firebaseConfig';
+import { analytics } from './../firebaseConfig';
+import { logEvent } from "firebase/analytics";
 import { collection, addDoc, serverTimestamp, getFirestore } from "firebase/firestore";
 import styles from './page.module.css';
 
@@ -237,6 +239,9 @@ export default function HomePage() {
             onClick={() => {
               setSelectedArt(art); // 선택된 작품 정보를 설정
               setIsChatModalOpen(true); // AI Chatting 모달 열기
+              if (analytics) {
+                logEvent(analytics, 'select_art', { artId: art.id }); // Log event when artwork is selected
+              }
             }}
           >
             {art.title} 작품에 대해 질문

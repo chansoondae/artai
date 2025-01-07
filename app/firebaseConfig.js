@@ -3,7 +3,7 @@
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, logEvent } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { signOut } from "firebase/auth";
 
@@ -17,12 +17,13 @@ const firebaseConfig = {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECTID,
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGEBUCKET,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID,
-    appId: process.NEXT_PUBLIC_FIREBASE_APPID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APPID,
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENTID,
   };
   
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null; // Ensure it's only initialized on the client-side
 
 export default app;
 
