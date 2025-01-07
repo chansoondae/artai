@@ -51,6 +51,8 @@ export default function HistoryPage() {
         return;
       }
 
+      console.log("Fetched count:", querySnapshot.docs.length);
+
       // Batched get artwork details for each chat history entry
       const data = await Promise.all(
         querySnapshot.docs.map(async (docSnap) => {
@@ -98,8 +100,10 @@ export default function HistoryPage() {
   }, [db, lastDoc, loading, isEnd]);
 
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    if (!loading && historyData.length === 0) {
+      fetchHistory();
+    }
+  }, [fetchHistory, loading, historyData]);
 
   // IntersectionObserver를 사용하여 무한 스크롤 구현
   useEffect(() => {
